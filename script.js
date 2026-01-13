@@ -1,7 +1,10 @@
-const days = document.querySelectorAll('.day');
+document.addEventListener('DOMContentLoaded', () => {
+  const days = document.querySelectorAll('.day');
 
-days.forEach(day => {
-  day.addEventListener('click', () => {
-    console.log('クリックされた日:', day.textContent);
+  days.forEach(day => {
+    day.addEventListener('click', () => {
+      day.classList.toggle('done');
+      console.log('ぽん:', day.textContent);
+    });
   });
 });

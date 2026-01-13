@@ -13,6 +13,19 @@ body {
   align-items: center;
 }
 
+.day {
+  cursor: pointer;
+}
+
+.day:hover {
+  background-color: #f0f0f0;
+}
+
+.day.done {
+  background-color: #ffeb99;
+}
+
+
 table {
   border-collapse: collapse;
   font-size: 1.5rem;
