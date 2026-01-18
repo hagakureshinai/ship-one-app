@@ -13,6 +13,17 @@ body {
   align-items: center;
 }
 
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.calendar-header button {
+  cursor: pointer;
+}
+
 .day {
   cursor: pointer;
 }
