@@ -13,49 +13,63 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function generateCalendar(year, month) {
-  const tbody = document.querySelector("tbody");
-  tbody.innerHTML = "";
+    const tbody = document.querySelector("tbody");
+    tbody.innerHTML = "";
 
-  const firstDay = new Date(year, month, 1);
-  const lastDate = new Date(year, month + 1, 0).getDate();
-  const doneDays = getDoneDays(year, month);
+    const firstDay = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const doneDays = getDoneDays(year, month);
 
-  let row = document.createElement("tr");
+    let row = document.createElement("tr");
 
-  for (let i = 0; i < firstDay.getDay(); i++) {
-    row.appendChild(document.createElement("td"));
-  }
-
-  for (let date = 1; date <= lastDate; date++) {
-    const cell = document.createElement("td");
-    cell.textContent = date;
-    cell.classList.add("day");
-
-    if (doneDays.includes(date)) {
-      cell.classList.add("done");
+    for (let i = 0; i < firstDay.getDay(); i++) {
+      row.appendChild(document.createElement("td"));
     }
 
-    cell.addEventListener("click", () => {
-      cell.classList.toggle("done");
+    for (let date = 1; date <= lastDate; date++) {
+      const cell = document.createElement("td");
+      cell.textContent = date;
+      cell.classList.add("day");
 
-      let updated = getDoneDays(year, month);
-      if (updated.includes(date)) {
-        updated = updated.filter(d => d !== date);
-      } else {
-        updated.push(date);
+      if (doneDays.includes(date)) {
+        cell.classList.add("done");
       }
-      saveDoneDays(year, month, updated);
-    });
 
-    row.appendChild(cell);
+      cell.addEventListener("click", () => {
+        cell.classList.toggle("done");
 
-    if ((firstDay.getDay() + date) % 7 === 0) {
-      tbody.appendChild(row);
-      row = document.createElement("tr");
+        let updated = getDoneDays(year, month);
+        if (updated.includes(date)) {
+          updated = updated.filter(d => d !== date);
+        } else {
+          updated.push(date);
+        }
+        saveDoneDays(year, month, updated);
+      });
+
+      row.appendChild(cell);
+
+      if ((firstDay.getDay() + date) % 7 === 0) {
+        tbody.appendChild(row);
+        row = document.createElement("tr");
+      }
     }
-  }
 
-  tbody.appendChild(row);
+    // ① 最終行を7セルに揃える
+    while (row.children.length < 7) {
+      row.appendChild(document.createElement("td"));
+    }
+    tbody.appendChild(row);
+
+    // 常に6行生成する
+    while (tbody.children.length < 6) {
+      const emptyRow = document.createElement("tr");
+      for (let i = 0; i < 7; i++) {
+        emptyRow.appendChild(document.createElement("td"));
+      }
+      tbody.appendChild(emptyRow);
+    }
+
   }
 
   document.getElementById('prev').addEventListener('click', () => {

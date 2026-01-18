@@ -26,15 +26,12 @@ body {
 
 .day {
   cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .day:hover {
   background-color: #f0f0f0;
 }
-
-/* .day.done {
-  background-color: #ffeb99;
-} */
 
 .day.done {
   background-image: url("image/1.png");
@@ -42,7 +39,6 @@ body {
   background-repeat: no-repeat;
   background-position: center;
 }
-
 
 table {
   border-collapse: collapse;
