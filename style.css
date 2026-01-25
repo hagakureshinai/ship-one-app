@@ -53,3 +53,11 @@ td {
   text-align: center;
   vertical-align: middle;
 }
+
+@media (max-width: 480px) {
+  th, td {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+}
