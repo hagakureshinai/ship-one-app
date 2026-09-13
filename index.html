@@ -1,41 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ぽんぽんカレンダー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fce9df">
+  <meta name="description" content="今日の進む方向と、4つのルートの次の一歩を確認する現在地コンパス">
+  <title>現在地コンパス</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <main class="compass">
+    <header class="hero">
+      <p class="eyebrow">MY LIFE COMPASS</p>
+      <h1>現在地コンパス</h1>
+      <p class="hero-message">小さな一歩が、<br>好きな未来につながっていく。</p>
+    </header>
 
-    <h1>ぽんぽんカレンダー</h1>
+    <section class="north-star" aria-labelledby="north-star-title">
+      <p class="section-label" id="north-star-title"><span aria-hidden="true">🌟</span> 北極星</p>
+      <p class="north-star-text">自分の時間と創作を守りながら、<br>自分で収入を作れる生活。</p>
+      <span class="divider" aria-hidden="true"></span>
+      <p class="daily-message">今日も、ちょっと進もう。</p>
+    </section>
 
-    <div class="calendar-header">
-      <button id="prev">◀</button>
-      <h2 id="current-month"></h2>
-      <button id="next">▶</button>
-    </div>
+    <section class="routes" aria-label="4つのルート">
+      <details class="route-card route-income">
+        <summary><span class="route-icon" aria-hidden="true">💰</span><span class="route-title">自分で収入を作る</span><span class="route-next">CMFinds｜2記事めを完成させる</span><span class="route-toggle" aria-hidden="true"></span></summary>
+        <div class="route-detail"><dl>
+          <div><dt>🎯 第1中間地点</dt><dd>小さくても、自分の力で継続的な収入を作る。</dd></div>
+          <div><dt>🧭 今向かっている方向</dt><dd>CMFindsの記事を増やし、公開の土台を整える。</dd></div>
+          <div><dt>👣 今の一歩</dt><dd>2記事めの本文を最後まで書き切る。</dd></div>
+        </dl></div>
+      </details>
 
-    <table>
-      <thead>
-        <tr>
-          <th>日</th>
-          <th>月</th>
-          <th>火</th>
-          <th>水</th>
-          <th>木</th>
-          <th>金</th>
-          <th>土</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- JSがここに日付を生成 -->
-      </tbody>
-    </table>
+      <details class="route-card route-create">
+        <summary><span class="route-icon" aria-hidden="true">✍️</span><span class="route-title">創作を育てる</span><span class="route-next">観測者｜既存プロジェクトを棚卸しする</span><span class="route-toggle" aria-hidden="true"></span></summary>
+        <div class="route-detail"><dl>
+          <div><dt>🎯 第1中間地点</dt><dd>育てたい創作を選び、続けられる形にする。</dd></div>
+          <div><dt>🧭 今向かっている方向</dt><dd>手元にあるアイデアと作品の現在地を知る。</dd></div>
+          <div><dt>👣 今の一歩</dt><dd>既存プロジェクトを一覧に書き出す。</dd></div>
+        </dl></div>
+      </details>
 
-  </div>
+      <details class="route-card route-wellness">
+        <summary><span class="route-icon" aria-hidden="true">🧘</span><span class="route-title">心身を整える</span><span class="route-next">ポテチ欲 → 🚨ちゃっくん／店内一周</span><span class="route-toggle" aria-hidden="true"></span></summary>
+        <div class="route-detail"><dl>
+          <div><dt>🎯 第1中間地点</dt><dd>無理なく調子を戻せる自分なりの方法を持つ。</dd></div>
+          <div><dt>🧭 今向かっている方向</dt><dd>衝動に気づき、ひと呼吸おける習慣を作る。</dd></div>
+          <div><dt>👣 今の一歩</dt><dd>ポテチが欲しくなったら、ちゃっくんに話すか店内を一周する。</dd></div>
+        </dl></div>
+      </details>
 
+      <details class="route-card route-work">
+        <summary><span class="route-icon" aria-hidden="true">🧭</span><span class="route-title">仕事を選ぶ</span><span class="route-next">面白そうな場所 → 公式採用情報を見る</span><span class="route-toggle" aria-hidden="true"></span></summary>
+        <div class="route-detail"><dl>
+          <div><dt>🎯 第1中間地点</dt><dd>好奇心と生活の両方を大切にできる仕事を見つける。</dd></div>
+          <div><dt>🧭 今向かっている方向</dt><dd>気になる場所を集め、働き方を具体的に知る。</dd></div>
+          <div><dt>👣 今の一歩</dt><dd>面白そうと思った場所の公式採用情報を見る。</dd></div>
+        </dl></div>
+      </details>
+    </section>
+
+    <section class="night-check" aria-labelledby="night-check-title">
+      <p class="section-label" id="night-check-title"><span aria-hidden="true">🌙</span> 今日の地図チェック</p>
+      <p class="check-question">今日、人生地図に関係する<br>発見や変化はあった？</p>
+      <p class="check-note">なければ、今日はここまで。</p>
+      <span class="divider divider-light" aria-hidden="true"></span>
+      <p class="check-question check-question-small">あったら、<br>今の「次の一歩」を変える必要がある？</p>
+      <div class="check-options">
+        <p><strong>NO</strong><span>そのままでOK</span></p>
+        <p><strong>YES / わからない</strong><span>人生地図ちゃっくんと相談</span></p>
+      </div>
+    </section>
+    <footer>明日も、ここから。</footer>
+  </main>
   <script src="script.js"></script>
 </body>
 </html>
