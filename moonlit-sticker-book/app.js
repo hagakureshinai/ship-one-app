@@ -114,10 +114,9 @@ camera.addEventListener('click',async()=>{
 });
 document.querySelector('#close-preview').addEventListener('click',()=>preview.close());
 const STORAGE_KEY='moonlit-sticker-book.layout.v1',saveLayout=document.querySelector('#save-layout');
-let noticeTimer;
+document.addEventListener('pointerdown',()=>{document.querySelector('#save-notice').hidden=true},true);
 function notifySave(message){
-  const notice=document.querySelector('#save-notice');clearTimeout(noticeTimer);notice.textContent=message;notice.hidden=false;
-  noticeTimer=setTimeout(()=>{notice.hidden=true},3500);
+  const notice=document.querySelector('#save-notice');notice.textContent=message;notice.hidden=false;
 }
 saveLayout.addEventListener('click',()=>{
   try{
