@@ -5,8 +5,8 @@ const materials = [
 ].map(([key,label,width]) => ({key,label,width,image:new Image(),mask:null}));
 const board=document.querySelector('#board'), layer=document.querySelector('#stickers');
 const tray=document.querySelector('#tray'), menu=document.querySelector('#selection-menu');
-let items=[], selected=null, gesture=null, serial=0;
-const titleTile=document.querySelector('#title-tile');
+let items=[], selected=null, gesture=null, serial=0, viewing=false;
+function setViewing(value){viewing=value;select(null);document.body.classList.toggle('viewing',value)}
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function select(item){
   selected=item;
@@ -21,7 +21,6 @@ function add(material){
   item.element.className='sticker';item.element.dataset.id=String(++serial);
   const img=material.image.cloneNode();img.alt=material.label;img.draggable=false;
   item.element.append(img);layer.append(item.element);items.push(item);place(item);select(item);
-  titleTile.hidden=true;
   document.querySelector('#status').textContent=`${material.label}を追加しました`;
 }
 // Test visible pixels rather than transparent rectangles, so overlapping art remains selectable.
@@ -39,9 +38,9 @@ function stickerWidth(material){return Math.min(material.width,.7*board.clientHe
 new ResizeObserver(()=>{for(const item of items){item.w=stickerWidth(item.material);item.h=stickerHeight(item.material,item.w);item.x=clamp(item.x,0,1-item.w);item.y=clamp(item.y,0,1-item.h);place(item)}}).observe(board);
 board.addEventListener('pointerdown',e=>{
   if(gesture||!e.isPrimary||e.button!==0)return;
-  const p=point(e),item=hit(p.x,p.y);select(item);
-  if(item)titleTile.hidden=true;
-  gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false};
+  const p=point(e),item=viewing?null:hit(p.x,p.y);
+  if(!viewing)select(item);
+  gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false,wasViewing:viewing};
   board.setPointerCapture(e.pointerId);e.preventDefault();
 });
 board.addEventListener('pointermove',e=>{
@@ -51,7 +50,12 @@ board.addEventListener('pointermove',e=>{
   const p=point(e),i=gesture.item;
   i.x=clamp(gesture.x+p.x-gesture.p.x,0,1-i.w);i.y=clamp(gesture.y+p.y-gesture.p.y,0,1-i.h);place(i);
 });
-board.addEventListener('pointerup',e=>{if(gesture?.id!==e.pointerId)return;if(!gesture.item&&!gesture.moved)titleTile.hidden=!titleTile.hidden;gesture=null});
+board.addEventListener('pointerup',e=>{
+  if(gesture?.id!==e.pointerId)return;
+  const moved=gesture.moved||Math.hypot(e.clientX-gesture.clientX,e.clientY-gesture.clientY)>5;
+  if(!gesture.item&&!moved)setViewing(!gesture.wasViewing);
+  gesture=null;
+});
 for(const type of ['pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
 document.querySelector('#remove').addEventListener('click',()=>{if(!selected)return;selected.element.remove();items=items.filter(i=>i!==selected);select(null)});
 document.querySelector('#deselect').addEventListener('click',()=>select(null));
