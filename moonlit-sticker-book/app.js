@@ -3,6 +3,7 @@ const materials = [
   ['moon','月',.24],['lamp','ランプ',.31],['roses','バラ',.29],['ivy','アイビー',.35],
   ['books','古書',.30],['teacup','ティーカップ',.25],['paper','紙片',.33],['sparkle','キラキラ',.38]
 ].map(([key,label,width]) => ({key,label,width,image:new Image(),mask:null}));
+for(const material of materials)material.ready=new Promise(resolve=>{material.finishLoading=resolve});
 const board=document.querySelector('#board'), layer=document.querySelector('#stickers');
 const tray=document.querySelector('#tray'), menu=document.querySelector('#selection-menu');
 let items=[], selected=null, gesture=null, serial=0, viewing=false;
@@ -26,14 +27,14 @@ function positionMenu(){
   button.style.left=`${clamp((r.left+r.right)/2-origin.left-w/2,left,right-w)}px`;
   button.style.top=`${clamp(r.top-origin.top-h-6,top,bottom-h)}px`;
 }
-function add(material){
+function add(material,saved=null){
   if(!material.mask)return;
   const w=stickerWidth(material),h=stickerHeight(material,w);
-  const item={material,w,h,x:(1-w)/2,y:(1-h)/2,element:document.createElement('div')};
+  const item={material,w,h,x:saved?clamp(saved.x,0,1-w):(1-w)/2,y:saved?clamp(saved.y,0,1-h):(1-h)/2,element:document.createElement('div')};
   item.element.className='sticker';item.element.dataset.id=String(++serial);
   const img=material.image.cloneNode();img.alt=material.label;img.draggable=false;
-  item.element.append(img);layer.append(item.element);items.push(item);place(item);select(item);
-  document.querySelector('#status').textContent=`${material.label}を追加しました`;
+  item.element.append(img);layer.append(item.element);items.push(item);place(item);
+  if(!saved){select(item);document.querySelector('#status').textContent=`${material.label}を追加しました`}
 }
 // Test visible pixels rather than transparent rectangles, so overlapping art remains selectable.
 function hit(x,y){
@@ -112,6 +113,32 @@ camera.addEventListener('click',async()=>{
   finally{updateCamera()}
 });
 document.querySelector('#close-preview').addEventListener('click',()=>preview.close());
+const STORAGE_KEY='moonlit-sticker-book.layout.v1',saveLayout=document.querySelector('#save-layout');
+let noticeTimer;
+function notifySave(message){
+  const notice=document.querySelector('#save-notice');clearTimeout(noticeTimer);notice.textContent=message;notice.hidden=false;
+  noticeTimer=setTimeout(()=>{notice.hidden=true},3500);
+}
+saveLayout.addEventListener('click',()=>{
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,items:items.map(i=>({key:i.material.key,x:i.x,y:i.y}))}));
+    notifySave('保存しました');
+  }catch{notifySave('保存できませんでした。Safariの保存設定や空き容量を確認してください。')}
+});
+Promise.all(materials.map(m=>m.ready)).then(()=>{
+  if(materials.some(m=>!m.mask)){notifySave('素材を読み込めませんでした。再読み込みしてください。');return}
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw!==null){
+      const data=JSON.parse(raw);
+      if(data.version!==1||!Array.isArray(data.items)||data.items.some(i=>!i||!materials.some(m=>m.key===i.key)||!Number.isFinite(i.x)||!Number.isFinite(i.y)||i.x<0||i.x>1||i.y<0||i.y>1))throw new Error('Invalid saved layout');
+      for(const saved of data.items)add(materials.find(m=>m.key===saved.key),saved);
+      select(null);
+    }
+  }catch{notifySave('保存した配置を読み込めませんでした。保存データは変更していません。')}
+  saveLayout.disabled=false;
+  tray.querySelectorAll('button').forEach(button=>{button.disabled=false});
+});
 for(const material of materials){
   const button=document.createElement('button');button.className='material';button.type='button';button.disabled=true;button.setAttribute('aria-label',`${material.label}を貼る`);
   const thumbnail=document.createElement('img');thumbnail.src=`assets/${material.key}.png`;thumbnail.alt='';thumbnail.draggable=false;button.append(thumbnail);tray.append(button);
@@ -122,8 +149,8 @@ for(const material of materials){
   button.addEventListener('click',e=>{if(start&&(start.moved||Math.abs(tray.scrollLeft-start.scroll)>8)){e.preventDefault();start=null;return}start=null;add(material)});
   material.image.onload=()=>{
     const canvas=document.createElement('canvas');canvas.width=material.image.naturalWidth;canvas.height=material.image.naturalHeight;
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(material.image,0,0);material.mask=ctx.getImageData(0,0,canvas.width,canvas.height);button.disabled=false;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(material.image,0,0);material.mask=ctx.getImageData(0,0,canvas.width,canvas.height);material.finishLoading();
   };
-  material.image.onerror=()=>{document.querySelector('#status').textContent=`${material.label}の画像を読み込めませんでした`};
+  material.image.onerror=()=>{document.querySelector('#status').textContent=`${material.label}の画像を読み込めませんでした`;material.finishLoading()};
   material.image.src=`assets/${material.key}.png`;
 }

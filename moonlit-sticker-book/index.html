@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#eee7da">
   <title>月明かりの窓辺</title>
-  <link rel="stylesheet" href="style.css?v=7">
-  <script src="app.js?v=7" defer></script>
+  <link rel="stylesheet" href="style.css?v=8">
+  <script src="app.js?v=8" defer></script>
 </head>
 <body>
   <main class="book">
@@ -15,6 +15,8 @@
     <section class="workspace" aria-label="ステッカーの台紙">
       <div id="board"><img class="background" src="assets/background.png" alt="月明かりを待つ洋館の窓辺" draggable="false"><div id="stickers"></div></div>
     </section>
+    <button id="save-layout" type="button" aria-label="配置を保存" disabled><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 5h7l2 3h9v12H3z" stroke-linejoin="round"/></svg></button>
+    <p id="save-notice" role="status" hidden></p>
     <footer id="controls">
       <div id="tray" aria-label="ステッカー素材"></div>
     </footer>
