@@ -73,6 +73,45 @@ board.addEventListener('pointerup',e=>{
 });
 for(const type of ['pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
 document.querySelector('#remove').addEventListener('click',()=>{if(!selected)return;selected.element.remove();items=items.filter(i=>i!==selected);select(null)});
+const background=document.querySelector('.background'),camera=document.querySelector('#camera');
+const preview=document.querySelector('#save-preview');
+function updateCamera(){camera.disabled=!(background.complete&&background.naturalWidth)}
+background.addEventListener('load',updateCamera);updateCamera();
+function renderArtwork(){
+  const width=board.clientWidth,height=board.clientHeight;
+  if(!width||!height||!background.naturalWidth)throw new Error('台紙の読み込みを待って、もう一度お試しください。');
+  const scale=Math.min(2,2048/Math.max(width,height));
+  const canvas=document.createElement('canvas');canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);
+  const ctx=canvas.getContext('2d');
+  // Match the centered object-fit:cover crop of the visible board.
+  const fit=Math.max(canvas.width/background.naturalWidth,canvas.height/background.naturalHeight);
+  const bw=background.naturalWidth*fit,bh=background.naturalHeight*fit;
+  ctx.drawImage(background,(canvas.width-bw)/2,(canvas.height-bh)/2,bw,bh);
+  for(const item of items)ctx.drawImage(item.material.image,item.x*canvas.width,item.y*canvas.height,item.w*canvas.width,item.h*canvas.height);
+  return canvas;
+}
+function showSavePreview(dataUrl,message='画像を長押しして保存できます。パソコンではダウンロードも使えます。'){
+  document.querySelector('#saved-artwork').src=dataUrl;
+  document.querySelector('#download-artwork').href=dataUrl;
+  document.querySelector('#save-message').textContent=message;
+  preview.showModal();
+}
+camera.addEventListener('click',async()=>{
+  if(camera.disabled)return;
+  camera.disabled=true;
+  try{
+    // Build the file synchronously so Safari retains the tap's user activation for share().
+    const dataUrl=renderArtwork().toDataURL('image/png');
+    const binary=atob(dataUrl.split(',')[1]),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    const file=new File([bytes],'moonlit-sticker-book.png',{type:'image/png'});
+    if(navigator.share&&navigator.canShare?.({files:[file]})){
+      try{await navigator.share({files:[file]})}
+      catch(error){if(error.name!=='AbortError')showSavePreview(dataUrl,'共有できなかったため、作品画像を表示しました。画像を長押しして保存できます。')}
+    }else showSavePreview(dataUrl);
+  }catch(error){document.querySelector('#status').textContent=error.message;alert('作品画像を作れませんでした。台紙の読み込み後にもう一度お試しください。')}
+  finally{updateCamera()}
+});
+document.querySelector('#close-preview').addEventListener('click',()=>preview.close());
 for(const material of materials){
   const button=document.createElement('button');button.className='material';button.type='button';button.disabled=true;button.setAttribute('aria-label',`${material.label}を貼る`);
   const thumbnail=document.createElement('img');thumbnail.src=`assets/${material.key}.png`;thumbnail.alt='';thumbnail.draggable=false;button.append(thumbnail);tray.append(button);
