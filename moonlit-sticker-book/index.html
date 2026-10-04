@@ -5,19 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#eee7da">
   <title>月明かりの窓辺</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script src="app.js?v=2" defer></script>
 </head>
 <body>
   <main class="book">
-    <header><span class="overline">MOONLIT STICKER BOOK</span><h1>月明かりの窓辺</h1></header>
+    <header id="title-tile" hidden><span class="overline">MOONLIT STICKER BOOK</span><h1>月明かりの窓辺</h1></header>
     <section class="workspace" aria-label="ステッカーの台紙">
       <div id="board"><img class="background" src="assets/background.png" alt="月明かりを待つ洋館の窓辺" draggable="false"><div id="stickers"></div></div>
     </section>
     <footer id="controls">
       <div id="tray" aria-label="ステッカー素材"></div>
       <div id="selection-menu" hidden><button id="remove" type="button">削除</button><button id="deselect" type="button">選択を解除</button></div>
-      <div class="bottom"><span id="hint">素材をタップして、窓辺に飾ろう</span><button id="view" type="button">作品を見る <span aria-hidden="true">☾</span></button></div>
     </footer>
     <p id="status" role="status" class="sr-only"></p>
   </main>

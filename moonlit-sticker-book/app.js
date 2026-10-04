@@ -5,22 +5,23 @@ const materials = [
 ].map(([key,label,width]) => ({key,label,width,image:new Image(),mask:null}));
 const board=document.querySelector('#board'), layer=document.querySelector('#stickers');
 const tray=document.querySelector('#tray'), menu=document.querySelector('#selection-menu');
-let items=[], selected=null, viewing=false, gesture=null, serial=0;
+let items=[], selected=null, gesture=null, serial=0;
+const titleTile=document.querySelector('#title-tile');
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function select(item){
   selected=item;
   items.forEach(i=>i.element.classList.toggle('selected',i===item));
   tray.hidden=!!item;menu.hidden=!item;
-  document.querySelector('#hint').textContent=item?'指で動かして、好きな場所へ':'素材をタップして、窓辺に飾ろう';
 }
 function place(item){item.element.style.cssText=`left:${item.x*100}%;top:${item.y*100}%;width:${item.w*100}%;height:${item.h*100}%`}
 function add(material){
   if(!material.mask)return;
-  const w=material.width,h=w*material.image.naturalHeight/material.image.naturalWidth/1.5;
+  const w=stickerWidth(material),h=stickerHeight(material,w);
   const item={material,w,h,x:(1-w)/2,y:(1-h)/2,element:document.createElement('div')};
   item.element.className='sticker';item.element.dataset.id=String(++serial);
   const img=material.image.cloneNode();img.alt=material.label;img.draggable=false;
   item.element.append(img);layer.append(item.element);items.push(item);place(item);select(item);
+  titleTile.hidden=true;
   document.querySelector('#status').textContent=`${material.label}を追加しました`;
 }
 // Test visible pixels rather than transparent rectangles, so overlapping art remains selectable.
@@ -33,25 +34,27 @@ function hit(x,y){
   }return null;
 }
 function point(e){const r=board.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}}
+function stickerHeight(material,width){return width*material.image.naturalHeight/material.image.naturalWidth*board.clientWidth/board.clientHeight}
+function stickerWidth(material){return Math.min(material.width,.7*board.clientHeight/board.clientWidth*material.image.naturalWidth/material.image.naturalHeight)}
+new ResizeObserver(()=>{for(const item of items){item.w=stickerWidth(item.material);item.h=stickerHeight(item.material,item.w);item.x=clamp(item.x,0,1-item.w);item.y=clamp(item.y,0,1-item.h);place(item)}}).observe(board);
 board.addEventListener('pointerdown',e=>{
-  if(viewing||gesture||!e.isPrimary||e.button!==0)return;
+  if(gesture||!e.isPrimary||e.button!==0)return;
   const p=point(e),item=hit(p.x,p.y);select(item);
-  if(!item)return;
-  gesture={id:e.pointerId,item,p,x:item.x,y:item.y,clientX:e.clientX,clientY:e.clientY,moved:false};
+  if(item)titleTile.hidden=true;
+  gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false};
   board.setPointerCapture(e.pointerId);e.preventDefault();
 });
 board.addEventListener('pointermove',e=>{
   if(!gesture||e.pointerId!==gesture.id)return;
   if(Math.hypot(e.clientX-gesture.clientX,e.clientY-gesture.clientY)>5)gesture.moved=true;
-  if(!gesture.moved)return;
+  if(!gesture.moved||!gesture.item)return;
   const p=point(e),i=gesture.item;
   i.x=clamp(gesture.x+p.x-gesture.p.x,0,1-i.w);i.y=clamp(gesture.y+p.y-gesture.p.y,0,1-i.h);place(i);
 });
-for(const type of ['pointerup','pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
+board.addEventListener('pointerup',e=>{if(gesture?.id!==e.pointerId)return;if(!gesture.item&&!gesture.moved)titleTile.hidden=!titleTile.hidden;gesture=null});
+for(const type of ['pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
 document.querySelector('#remove').addEventListener('click',()=>{if(!selected)return;selected.element.remove();items=items.filter(i=>i!==selected);select(null)});
 document.querySelector('#deselect').addEventListener('click',()=>select(null));
-document.querySelector('#view').addEventListener('click',()=>{select(null);viewing=true;document.body.classList.add('viewing')});
-document.querySelector('.workspace').addEventListener('click',()=>{if(viewing){viewing=false;document.body.classList.remove('viewing')}});
 for(const material of materials){
   const button=document.createElement('button');button.className='material';button.type='button';button.disabled=true;button.setAttribute('aria-label',`${material.label}を貼る`);
   const thumbnail=document.createElement('img');thumbnail.src=`assets/${material.key}.png`;thumbnail.alt='';thumbnail.draggable=false;button.append(thumbnail);tray.append(button);
