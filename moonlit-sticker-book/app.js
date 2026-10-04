@@ -1,0 +1,69 @@
+'use strict';
+const materials = [
+  ['moon','月',.24],['lamp','ランプ',.31],['roses','バラ',.29],['ivy','アイビー',.35],
+  ['books','古書',.30],['teacup','ティーカップ',.25],['paper','紙片',.33],['sparkle','キラキラ',.38]
+].map(([key,label,width]) => ({key,label,width,image:new Image(),mask:null}));
+const board=document.querySelector('#board'), layer=document.querySelector('#stickers');
+const tray=document.querySelector('#tray'), menu=document.querySelector('#selection-menu');
+let items=[], selected=null, viewing=false, gesture=null, serial=0;
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+function select(item){
+  selected=item;
+  items.forEach(i=>i.element.classList.toggle('selected',i===item));
+  tray.hidden=!!item;menu.hidden=!item;
+  document.querySelector('#hint').textContent=item?'指で動かして、好きな場所へ':'素材をタップして、窓辺に飾ろう';
+}
+function place(item){item.element.style.cssText=`left:${item.x*100}%;top:${item.y*100}%;width:${item.w*100}%;height:${item.h*100}%`}
+function add(material){
+  if(!material.mask)return;
+  const w=material.width,h=w*material.image.naturalHeight/material.image.naturalWidth/1.5;
+  const item={material,w,h,x:(1-w)/2,y:(1-h)/2,element:document.createElement('div')};
+  item.element.className='sticker';item.element.dataset.id=String(++serial);
+  const img=material.image.cloneNode();img.alt=material.label;img.draggable=false;
+  item.element.append(img);layer.append(item.element);items.push(item);place(item);select(item);
+  document.querySelector('#status').textContent=`${material.label}を追加しました`;
+}
+// Test visible pixels rather than transparent rectangles, so overlapping art remains selectable.
+function hit(x,y){
+  for(let n=items.length-1;n>=0;n--){
+    const i=items[n],u=(x-i.x)/i.w,v=(y-i.y)/i.h,m=i.material.mask;
+    if(u<0||v<0||u>=1||v>=1)continue;
+    const px=Math.floor(u*m.width),py=Math.floor(v*m.height);
+    if(m.data[(py*m.width+px)*4+3]>24)return i;
+  }return null;
+}
+function point(e){const r=board.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}}
+board.addEventListener('pointerdown',e=>{
+  if(viewing||gesture||!e.isPrimary||e.button!==0)return;
+  const p=point(e),item=hit(p.x,p.y);select(item);
+  if(!item)return;
+  gesture={id:e.pointerId,item,p,x:item.x,y:item.y,clientX:e.clientX,clientY:e.clientY,moved:false};
+  board.setPointerCapture(e.pointerId);e.preventDefault();
+});
+board.addEventListener('pointermove',e=>{
+  if(!gesture||e.pointerId!==gesture.id)return;
+  if(Math.hypot(e.clientX-gesture.clientX,e.clientY-gesture.clientY)>5)gesture.moved=true;
+  if(!gesture.moved)return;
+  const p=point(e),i=gesture.item;
+  i.x=clamp(gesture.x+p.x-gesture.p.x,0,1-i.w);i.y=clamp(gesture.y+p.y-gesture.p.y,0,1-i.h);place(i);
+});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
+document.querySelector('#remove').addEventListener('click',()=>{if(!selected)return;selected.element.remove();items=items.filter(i=>i!==selected);select(null)});
+document.querySelector('#deselect').addEventListener('click',()=>select(null));
+document.querySelector('#view').addEventListener('click',()=>{select(null);viewing=true;document.body.classList.add('viewing')});
+document.querySelector('.workspace').addEventListener('click',()=>{if(viewing){viewing=false;document.body.classList.remove('viewing')}});
+for(const material of materials){
+  const button=document.createElement('button');button.className='material';button.type='button';button.disabled=true;button.setAttribute('aria-label',`${material.label}を貼る`);
+  const thumbnail=document.createElement('img');thumbnail.src=`assets/${material.key}.png`;thumbnail.alt='';thumbnail.draggable=false;button.append(thumbnail);tray.append(button);
+  let start=null;
+  button.addEventListener('pointerdown',e=>{start={x:e.clientX,y:e.clientY,scroll:tray.scrollLeft,moved:false}});
+  button.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>8)start.moved=true});
+  button.addEventListener('pointercancel',()=>{if(start)start.moved=true});
+  button.addEventListener('click',e=>{if(start&&(start.moved||Math.abs(tray.scrollLeft-start.scroll)>8)){e.preventDefault();start=null;return}start=null;add(material)});
+  material.image.onload=()=>{
+    const canvas=document.createElement('canvas');canvas.width=material.image.naturalWidth;canvas.height=material.image.naturalHeight;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(material.image,0,0);material.mask=ctx.getImageData(0,0,canvas.width,canvas.height);button.disabled=false;
+  };
+  material.image.onerror=()=>{document.querySelector('#status').textContent=`${material.label}の画像を読み込めませんでした`};
+  material.image.src=`assets/${material.key}.png`;
+}
