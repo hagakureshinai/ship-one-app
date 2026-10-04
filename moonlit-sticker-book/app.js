@@ -11,9 +11,21 @@ const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function select(item){
   selected=item;
   items.forEach(i=>i.element.classList.toggle('selected',i===item));
-  tray.hidden=!!item;menu.hidden=!item;
+  document.querySelector('#controls').hidden=!!item;menu.hidden=!item;
+  if(item)positionMenu();
 }
-function place(item){item.element.style.cssText=`left:${item.x*100}%;top:${item.y*100}%;width:${item.w*100}%;height:${item.h*100}%`}
+function place(item){item.element.style.cssText=`left:${item.x*100}%;top:${item.y*100}%;width:${item.w*100}%;height:${item.h*100}%`;if(item===selected)positionMenu()}
+function positionMenu(){
+  if(!selected)return;
+  const r=selected.element.getBoundingClientRect(),origin=menu.getBoundingClientRect(),style=getComputedStyle(menu);
+  const top=parseFloat(style.paddingTop),bottom=origin.height-parseFloat(style.paddingBottom);
+  const left=parseFloat(style.paddingLeft),right=origin.width-parseFloat(style.paddingRight);
+  for(const [id,above] of [['remove',true],['deselect',false]]){
+    const button=document.querySelector(`#${id}`),w=button.offsetWidth,h=button.offsetHeight;
+    button.style.left=`${clamp((r.left+r.right)/2-origin.left-w/2,left,right-w)}px`;
+    button.style.top=`${clamp(above?r.top-origin.top-h-6:r.bottom-origin.top+6,top,bottom-h)}px`;
+  }
+}
 function add(material){
   if(!material.mask)return;
   const w=stickerWidth(material),h=stickerHeight(material,w);
