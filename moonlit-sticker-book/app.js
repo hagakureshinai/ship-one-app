@@ -9,6 +9,7 @@ let items=[], selected=null, gesture=null, serial=0, viewing=false;
 function setViewing(value){viewing=value;select(null);document.body.classList.toggle('viewing',value)}
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function select(item){
+  document.body.classList.remove('placing');
   selected=item;
   items.forEach(i=>i.element.classList.toggle('selected',i===item));
   document.querySelector('#controls').hidden=!!item;menu.hidden=!item;
@@ -50,15 +51,17 @@ function stickerWidth(material){return Math.min(material.width,.7*board.clientHe
 new ResizeObserver(()=>{for(const item of items){item.w=stickerWidth(item.material);item.h=stickerHeight(item.material,item.w);item.x=clamp(item.x,0,1-item.w);item.y=clamp(item.y,0,1-item.h);place(item)}}).observe(board);
 board.addEventListener('pointerdown',e=>{
   if(gesture||!e.isPrimary||e.button!==0)return;
-  const p=point(e),item=viewing?null:hit(p.x,p.y);
+  const p=point(e),item=hit(p.x,p.y),wasViewing=viewing;
+  if(viewing&&item)setViewing(false);
   if(!viewing)select(item);
-  gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false,wasViewing:viewing};
+  gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false,wasViewing};
   board.setPointerCapture(e.pointerId);e.preventDefault();
 });
 board.addEventListener('pointermove',e=>{
   if(!gesture||e.pointerId!==gesture.id)return;
   if(Math.hypot(e.clientX-gesture.clientX,e.clientY-gesture.clientY)>5)gesture.moved=true;
   if(!gesture.moved||!gesture.item)return;
+  document.body.classList.add('placing');
   const p=point(e),i=gesture.item;
   i.x=clamp(gesture.x+p.x-gesture.p.x,0,1-i.w);i.y=clamp(gesture.y+p.y-gesture.p.y,0,1-i.h);place(i);
 });
