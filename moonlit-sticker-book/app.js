@@ -6,11 +6,12 @@ const materials = [
 const board=document.querySelector('#board'), layer=document.querySelector('#stickers');
 const tray=document.querySelector('#tray'), menu=document.querySelector('#selection-menu');
 let items=[], selected=null, gesture=null, serial=0, viewing=false;
-function setViewing(value){viewing=value;select(null);document.body.classList.toggle('viewing',value)}
+function setViewing(value){viewing=value;document.body.classList.toggle('viewing',value);select(null)}
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function select(item){
   document.body.classList.remove('placing');
   selected=item;
+  document.body.classList.toggle('selecting',!!item);
   items.forEach(i=>i.element.classList.toggle('selected',i===item));
   document.querySelector('#controls').hidden=!!item;menu.hidden=!item;
   if(item)positionMenu();
@@ -21,11 +22,9 @@ function positionMenu(){
   const r=selected.element.getBoundingClientRect(),origin=menu.getBoundingClientRect(),style=getComputedStyle(menu);
   const top=parseFloat(style.paddingTop),bottom=origin.height-parseFloat(style.paddingBottom);
   const left=parseFloat(style.paddingLeft),right=origin.width-parseFloat(style.paddingRight);
-  for(const [id,above] of [['remove',true],['deselect',false]]){
-    const button=document.querySelector(`#${id}`),w=button.offsetWidth,h=button.offsetHeight;
-    button.style.left=`${clamp((r.left+r.right)/2-origin.left-w/2,left,right-w)}px`;
-    button.style.top=`${clamp(above?r.top-origin.top-h-6:r.bottom-origin.top+6,top,bottom-h)}px`;
-  }
+  const button=document.querySelector('#remove'),w=button.offsetWidth,h=button.offsetHeight;
+  button.style.left=`${clamp((r.left+r.right)/2-origin.left-w/2,left,right-w)}px`;
+  button.style.top=`${clamp(r.top-origin.top-h-6,top,bottom-h)}px`;
 }
 function add(material){
   if(!material.mask)return;
@@ -52,8 +51,9 @@ new ResizeObserver(()=>{for(const item of items){item.w=stickerWidth(item.materi
 board.addEventListener('pointerdown',e=>{
   if(gesture||!e.isPrimary||e.button!==0)return;
   const p=point(e),item=hit(p.x,p.y),wasViewing=viewing;
-  if(viewing&&item)setViewing(false);
-  if(!viewing)select(item);
+  if(item){
+    viewing=false;document.body.classList.remove('viewing');select(item);
+  }
   gesture={id:e.pointerId,item,p,x:item?.x,y:item?.y,clientX:e.clientX,clientY:e.clientY,moved:false,wasViewing};
   board.setPointerCapture(e.pointerId);e.preventDefault();
 });
@@ -73,7 +73,6 @@ board.addEventListener('pointerup',e=>{
 });
 for(const type of ['pointercancel','lostpointercapture'])board.addEventListener(type,e=>{if(gesture?.id===e.pointerId)gesture=null});
 document.querySelector('#remove').addEventListener('click',()=>{if(!selected)return;selected.element.remove();items=items.filter(i=>i!==selected);select(null)});
-document.querySelector('#deselect').addEventListener('click',()=>select(null));
 for(const material of materials){
   const button=document.createElement('button');button.className='material';button.type='button';button.disabled=true;button.setAttribute('aria-label',`${material.label}を貼る`);
   const thumbnail=document.createElement('img');thumbnail.src=`assets/${material.key}.png`;thumbnail.alt='';thumbnail.draggable=false;button.append(thumbnail);tray.append(button);
